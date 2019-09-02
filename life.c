@@ -1,4 +1,4 @@
-//by Mike Stapleton
+//written by Mike Stapleton
 //Game of Life
 //July 2009
 
