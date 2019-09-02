@@ -5,6 +5,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "raylib.h"
 #include "./emu.h"
 
 
@@ -365,3 +366,77 @@ void print_cpu() {
 
 }
 
+
+void keyboard_down(unsigned char key, int x, int y)
+{
+	if(key == 27)    // esc
+		exit(0);
+
+	if(key == '1')		keys[0x1] = 1;
+	else if(key == '2')	keys[0x2] = 1;
+	else if(key == '3')	keys[0x3] = 1;
+	else if(key == '4')	keys[0xC] = 1;
+
+	else if(key == 'q')	keys[0x4] = 1;
+	else if(key == 'w')	keys[0x5] = 1;
+	else if(key == 'e')	keys[0x6] = 1;
+	else if(key == 'r')	keys[0xD] = 1;
+
+	else if(key == 'a')	keys[0x7] = 1;
+	else if(key == 's')	keys[0x8] = 1;
+	else if(key == 'd')	keys[0x9] = 1;
+	else if(key == 'f')	keys[0xE] = 1;
+
+	else if(key == 'z')	keys[0xA] = 1;
+	else if(key == 'x')	keys[0x0] = 1;
+	else if(key == 'c')	keys[0xB] = 1;
+	else if(key == 'v')	keys[0xF] = 1;
+
+	//printf("Press key %c\n", key);
+}
+
+void keyboard_up(unsigned char key, int x, int y)
+{
+	if(key == '1')		keys[0x1] = 0;
+	else if(key == '2')	keys[0x2] = 0;
+	else if(key == '3')	keys[0x3] = 0;
+	else if(key == '4')	keys[0xC] = 0;
+
+	else if(key == 'q')	keys[0x4] = 0;
+	else if(key == 'w')	keys[0x5] = 0;
+	else if(key == 'e')	keys[0x6] = 0;
+	else if(key == 'r')	keys[0xD] = 0;
+
+	else if(key == 'a')	keys[0x7] = 0;
+	else if(key == 's')	keys[0x8] = 0;
+	else if(key == 'd')	keys[0x9] = 0;
+	else if(key == 'f')	keys[0xE] = 0;
+
+	else if(key == 'z')	keys[0xA] = 0;
+	else if(key == 'x')	keys[0x0] = 0;
+	else if(key == 'c')	keys[0xB] = 0;
+	else if(key == 'v')	keys[0xF] = 0;
+}
+
+
+int main(int argc, char** argv) {
+
+	unsigned int delay = 1000;
+
+	if(argc != 2) {
+		printf("need a filename\n");
+		exit(1);
+	}
+
+	initialize();
+	load_game(argv[1]);
+	for(;;) {
+		emulate_cycle();
+		usleep(delay);
+		if(draw_flag) {
+			debug_render();
+			draw_flag = 0;
+		}
+	}
+	return 0;
+}

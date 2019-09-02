@@ -1,9 +1,10 @@
 #include "./emu.h"
-#include <GL/glut.h>  // GLUT, include glu.h and gl.h
+//#include <GL/glut.h>  // GLUT, include glu.h and gl.h
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
 #include <unistd.h>
+
 
 #define SCREEN_WIDTH 64
 #define SCREEN_HEIGHT 32
@@ -19,7 +20,7 @@ void initGL() {
 	glEnable(GL_PROGRAM_POINT_SIZE);
 	glPointSize(25.0f);
 }
-*/
+
 
 void setupTexture()
 {
@@ -41,15 +42,17 @@ void setupTexture()
 	glEnable(GL_TEXTURE_2D);
 }
 
+
+
 void updateTexture()
 {	
 	// Update pixels
-/*	for(int y = 0; y < 32; ++y)		
-		for(int x = 0; x < 64; ++x)
-			if(gfx[y][x] == 0)
-				data[y][x][0] = data[y][x][1] = data[y][x][2] = 0;	
-			else 
-				data[y][x][0] = data[y][x][1] = data[y][x][2] = 255;  */
+//	for(int y = 0; y < 32; ++y)		
+//		for(int x = 0; x < 64; ++x)
+//			if(gfx[y][x] == 0)
+//				data[y][x][0] = data[y][x][1] = data[y][x][2] = 0;	
+//			else 
+//				data[y][x][0] = data[y][x][1] = data[y][x][2] = 255;  
 		
 	// Update Texture
 	glTexSubImage2D(GL_TEXTURE_2D, 0 ,0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)data);
@@ -62,6 +65,7 @@ void updateTexture()
 	glEnd();
 }
 
+
 void display() {
 	glClear(GL_COLOR_BUFFER_BIT);
 //	int delay = 3000;
@@ -69,21 +73,21 @@ void display() {
 		emulate_cycle();
 //		usleep(delay);
 		if(draw_flag) {
-/*			for(int i = 0; i < 32; i++) {
-				for(int j = 0; j < 64; j++)
-					if(gfx[i][j] != 0x0) {
-						data[i][j][0] = 255;
-						data[i][j][1] = 255;
-						data[i][j][2] = 255;
-					}
-					else {
-						data[i][j][0] = 0;
-						data[i][j][1] = 0;
-						data[i][j][2] = 0;
-					}
-			
-			}
-			glDrawPixels(64, 32, GL_RGB, GL_UNSIGNED_BYTE, data);*/
+//			for(int i = 0; i < 32; i++) {
+//				for(int j = 0; j < 64; j++)
+//					if(gfx[i][j] != 0x0) {
+//						data[i][j][0] = 255;
+//						data[i][j][1] = 255;
+//						data[i][j][2] = 255;
+//					}
+//					else {
+//						data[i][j][0] = 0;
+//						data[i][j][1] = 0;
+//						data[i][j][2] = 0;
+//					}
+//			
+//			}
+//			glDrawPixels(64, 32, GL_RGB, GL_UNSIGNED_BYTE, data);
 			draw_flag = 0;
 			updateTexture();
 			glutSwapBuffers();
@@ -104,9 +108,9 @@ void reshape_window(GLsizei w, GLsizei h)
 	display_width = w;
 	display_height = h;
 }
-
+*/
 int main(int argc, char** argv) {
-	int delay = 1000;
+	int delay = 400;
 	if(argc != 2) {
 		printf("need a filename\n");
 		exit(1);
@@ -116,7 +120,7 @@ int main(int argc, char** argv) {
 	load_game(argv[1]);
 	for(;;) {
 		emulate_cycle();
-		usleep(delay);
+//		usleep(delay);
 		if(draw_flag) {
 			debug_render();
 			draw_flag = 0;
