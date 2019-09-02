@@ -1,3 +1,7 @@
+//by Mike Stapleton
+//Game of Life
+//July 2009
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ncurses.h>
