@@ -1,4 +1,4 @@
-#include <GL/glut.h>  // GLUT, include glu.h and gl.h
+const unsigned char screen_multiplier = 10; 
 unsigned short opcode;		//opcode is 2 bytes
 unsigned char memory[4096];
 unsigned char V[16];		//Registers
@@ -16,10 +16,6 @@ void initialize();
 void emulate_cycle();
 void load_game();
 void debug_render();
-void keyboard_down(unsigned char key, int x, int y);
-void keyboard_up(unsigned char key, int x, int y);
-void updateTexture();
-void setupTexture();
-void display();
-void reshape_window(GLsizei w, GLsizei h);
-unsigned char data[32][64][3];
+
+
+

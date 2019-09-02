@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include "raylib.h"
 #include "./emu.h"
 
@@ -65,10 +64,8 @@ void emulate_cycle() {
 				case 0x0000:
 					draw_flag = 1;
 					for(int i = 0; i< 32; i++)
-						for(int j = 0; j < 64; j++) {
+						for(int j = 0; j < 64; j++)
 							gfx[i][j] = 0x0;
-							data[i][j][0] = data[i][j][1] = data[i][j][2] = 0;
-						}
 					pc += 2;					
 					break;
 				case 0x000E:	
@@ -77,10 +74,11 @@ void emulate_cycle() {
 					pc += 2;
 					break;
 				default:
-					break;
-					
+					printf("Unknown opcode\n");
+			
 			}
 			break;
+			
 		case 0x1000:
 			pc = opcode & 0x0FFF;
 			break;
@@ -151,7 +149,7 @@ void emulate_cycle() {
 					pc += 2;
 					break;
 				case 0x0006:
-					V[0xF] = ( V[(opcode & 0x0F00) >> 8] & 0x1 ); 
+					V[0xF] = V[(opcode & 0x0F00) >> 8] & 0x1; 
 					V[(opcode & 0x0F00) >> 8] >>= 1;
 					pc += 2;
 					break;
@@ -169,9 +167,11 @@ void emulate_cycle() {
 					pc += 2;
 					break;
 				default:
-					break;
+					printf("Unknown opcode\n");
+			
 			}
 			break;
+			
 		case 0x9000:
 			if ( V[(opcode & 0x0F00) >> 8] != V[(opcode & 0x00F0) >> 4] )
 				pc += 4;
@@ -187,73 +187,80 @@ void emulate_cycle() {
 			pc = V[0] + (opcode & 0x0FFF);			
 			break;
 		case 0xC000: 
-			V[(opcode & 0x0F00) >> 8] = (opcode & 0xFF) & (rand() % 0xFF);
+			V[(opcode & 0x0F00) >> 8] = (opcode & 0x00FF) & (rand() % 0xFF);
 			pc +=2;
 			break;
-		case 0xD000: { //draw sprite
+		case 0xD000: 
+		{ //draw sprite
 			unsigned short x = V[(opcode & 0x0F00) >> 8];
 			unsigned short y = V[(opcode & 0x00F0) >> 4];
 			unsigned short rows = opcode & 0x000F;
 			unsigned short pixel;
-			unsigned short new;
+			
 			V[0xF] = 0;
 			for(int i = 0; i< rows; i++) {
 				pixel = memory[I + i];
 				for(int j = 0; j< 8; j++) {	
+					unsigned short posX = (x+j) % 64;
+					unsigned short posY = (y+i) % 32;
 					if( (pixel & (0x80 >> j)) != 0) {
-						if(gfx[y+i][x+j] == 1)
+						if(gfx[posY][posX] == 1)
 							V[0xF] = 1;
-						new = gfx[y+i][x+j] ^= 1;
-						if(new == 0)
-							data[y+i][x+j][0] = data[y+i][x+j][1] = data[y+i][x+j][2] = 0;
-						else
-							data[y+i][x+j][0] = data[y+i][x+j][1] = data[y+i][x+j][2] = 255;
+						gfx[posY][posX] ^= 1;
 					}
 				}
 					
 			}
 			draw_flag = 1;
 			pc += 2;
-		}		
-			break;
+			
+		}	
+		break;	
+		
 			 
 		case 0xE000:	
 			switch (opcode & 0x00FF) {
 				case 0x009E: //EX9E
-					if(V[(opcode & 0x0F00) >> 8] != 0)
+					if(keys[V[(opcode & 0x0F00) >> 8]] != 0)
 						pc += 4;
 					else
 						pc += 2;
 					break;
 				case 0x00A1:
-					if(V[(opcode & 0x0F00) >> 8] == 0)
+					if(keys[V[(opcode & 0x0F00) >> 8]] == 0)
 						pc += 4;
 					else
 						pc += 2;
 					break;
 				default:
-					break;
+					printf("unknown opcode\n");
+			
 			}
 			break;
 			
+			
 		case 0xF000:
-			switch (opcode & 0x00FF) {
+			switch (opcode & 0x00FF) 
+			{
 				case 0x0007:
 					V[(opcode & 0x0F00) >> 8] = delay_timer;
 					pc += 2;
 					break;
-				case 0x000A: {
+				case 0x000A: 
+				{
 					unsigned char key_pressed = 0;
 					for(int i=0; i<16; i++) 
 						if(keys[i] != 0) {
 							key_pressed = 1;
 							V[(opcode & 0x0F00) >> 8] = i;
 						}
-					if(key_pressed == 0) 
+					if(!key_pressed) 
 						return;
 					pc += 2;
+					
 				}
-					break;
+				break;
+				
 				case 0x0015:
 					delay_timer = V[(opcode & 0x0F00) >> 8];
 					pc += 2;
@@ -263,7 +270,12 @@ void emulate_cycle() {
 					pc += 2;
 					break;
 				case 0x001E:
-					I += ((opcode & 0x0F00) >> 8);
+					if(I + V[(opcode & 0x0F00) >> 8] > 0xFFF)
+						V[0xF] = 1;
+					else
+						V[0xF] = 0;
+					I += V[(opcode & 0x0F00) >> 8];
+					pc += 2;
 					break;
 				case 0x0029:
 					I = V[(opcode & 0x0F00) >> 8] * 0x5;
@@ -280,28 +292,32 @@ void emulate_cycle() {
 					for (int i = 0; i <= last; i++)
 						memory[I + i] = V[i];
 		//Original interpreter
-				//	I += (last + 1);
+//					I += (last + 1);
 					pc += 2;
-				}					
-					break;
+					
+				}	
+				break;				
+					
 				case 0x0065: {
 					int last = (opcode & 0x0F00) >> 8;
 					for (int i = 0; i <= last; i++)
 						V[i] = memory[I + i];
 		//Original interpreter
-				//	I += (last + 1);
+//					I += (last + 1);
 					pc += 2;
+					
 				}					
-
-					break;
+				break;
+				
 				default:
 					printf("unknown opcode\n");
-
+			
 			}
 			break;
 
 		default:
 			printf("uknown opcode\n");
+			
 	}
 	
 	
@@ -309,9 +325,10 @@ void emulate_cycle() {
 	if(delay_timer > 0)
 		--delay_timer;
 	if(sound_timer > 0) {
-		if(sound_timer == 1);
-      			//printf("BEEP!\n");
 		--sound_timer;
+		if(sound_timer == 1);
+      			printf("BEEP!\n");
+		
 	}  
 
 }
@@ -338,7 +355,79 @@ void load_game(char *name) {
 	
 }
 
-void draw_graphics() {}
+void print_cpu() {
+	printf("pc: %x\n", pc);
+	printf("opcode: %x\n", opcode);
+	printf("I: %x\n", I);
+	printf("sp: %x\n", sp);
+	printf("stack: %x\n", stack[sp-1]);
+	printf("\n");
+
+}
+
+
+void check_keyboard()
+{
+	if(IsKeyDown(KEY_F1))	keys[0x1] = 1;
+	if(IsKeyDown(KEY_F2))	keys[0x2] = 1;
+	if(IsKeyDown(KEY_F3))	keys[0x3] = 1;
+	if(IsKeyDown(KEY_F4))	keys[0xC] = 1;
+
+	if(IsKeyDown(KEY_Q))	keys[0x4] = 1;
+	if(IsKeyDown(KEY_W))	keys[0x5] = 1;
+	if(IsKeyDown(KEY_E))	keys[0x6] = 1;
+	if(IsKeyDown(KEY_R))	keys[0xD] = 1;
+
+	if(IsKeyDown(KEY_A))	keys[0x7] = 1;
+	if(IsKeyDown(KEY_S))	keys[0x8] = 1;
+	if(IsKeyDown(KEY_D))	keys[0x9] = 1;
+	if(IsKeyDown(KEY_F))	keys[0xE] = 1;
+
+	if(IsKeyDown(KEY_Z))	keys[0xA] = 1;
+	if(IsKeyDown(KEY_X))	keys[0x0] = 1;
+	if(IsKeyDown(KEY_C))	keys[0xB] = 1;
+	if(IsKeyDown(KEY_V))	keys[0xF] = 1;
+
+
+
+	if(IsKeyUp(KEY_F1))	keys[0x1] = 0;
+	if(IsKeyUp(KEY_F2))	keys[0x2] = 0;
+	if(IsKeyUp(KEY_F3))	keys[0x3] = 0;
+	if(IsKeyUp(KEY_F4))	keys[0xC] = 0;
+
+	if(IsKeyUp(KEY_Q))	keys[0x4] = 0;
+	if(IsKeyUp(KEY_W))	keys[0x5] = 0;
+	if(IsKeyUp(KEY_E))	keys[0x6] = 0;
+	if(IsKeyUp(KEY_R))	keys[0xD] = 0;
+
+	if(IsKeyUp(KEY_A))	keys[0x7] = 0;
+	if(IsKeyUp(KEY_S))	keys[0x8] = 0;
+	if(IsKeyUp(KEY_D))	keys[0x9] = 0;
+	if(IsKeyUp(KEY_F))	keys[0xE] = 0;
+
+	if(IsKeyUp(KEY_Z))	keys[0xA] = 0;
+	if(IsKeyUp(KEY_X))	keys[0x0] = 0;
+	if(IsKeyUp(KEY_C))	keys[0xB] = 0;
+	if(IsKeyUp(KEY_V))	keys[0xF] = 0;
+
+	//printf("Press key %c\n", key);
+}
+
+void draw_graphics() {
+	Rectangle rect;
+	rect.width = rect.height = screen_multiplier;
+	ClearBackground(BLACK);
+	for(int y = 0; y < 32; ++y)
+	{
+		for(int x = 0; x < 64; ++x)
+		{
+			rect.x = x * screen_multiplier;
+			rect.y = y * screen_multiplier;
+			if(gfx[y][x] != 0x0) 
+				DrawRectangleRec(rect, RAYWHITE);
+		}
+	}
+}
 
 void debug_render() {
 
@@ -356,87 +445,29 @@ void debug_render() {
 	printf("\n");
 }
 
-void print_cpu() {
-	printf("pc: %x\n", pc);
-	printf("opcode: %x\n", opcode);
-	printf("I: %x\n", I);
-	printf("sp: %x\n", sp);
-	printf("stack: %x\n", stack[sp-1]);
-	printf("\n");
-
-}
-
-
-void keyboard_down(unsigned char key, int x, int y)
-{
-	if(key == 27)    // esc
-		exit(0);
-
-	if(key == '1')		keys[0x1] = 1;
-	else if(key == '2')	keys[0x2] = 1;
-	else if(key == '3')	keys[0x3] = 1;
-	else if(key == '4')	keys[0xC] = 1;
-
-	else if(key == 'q')	keys[0x4] = 1;
-	else if(key == 'w')	keys[0x5] = 1;
-	else if(key == 'e')	keys[0x6] = 1;
-	else if(key == 'r')	keys[0xD] = 1;
-
-	else if(key == 'a')	keys[0x7] = 1;
-	else if(key == 's')	keys[0x8] = 1;
-	else if(key == 'd')	keys[0x9] = 1;
-	else if(key == 'f')	keys[0xE] = 1;
-
-	else if(key == 'z')	keys[0xA] = 1;
-	else if(key == 'x')	keys[0x0] = 1;
-	else if(key == 'c')	keys[0xB] = 1;
-	else if(key == 'v')	keys[0xF] = 1;
-
-	//printf("Press key %c\n", key);
-}
-
-void keyboard_up(unsigned char key, int x, int y)
-{
-	if(key == '1')		keys[0x1] = 0;
-	else if(key == '2')	keys[0x2] = 0;
-	else if(key == '3')	keys[0x3] = 0;
-	else if(key == '4')	keys[0xC] = 0;
-
-	else if(key == 'q')	keys[0x4] = 0;
-	else if(key == 'w')	keys[0x5] = 0;
-	else if(key == 'e')	keys[0x6] = 0;
-	else if(key == 'r')	keys[0xD] = 0;
-
-	else if(key == 'a')	keys[0x7] = 0;
-	else if(key == 's')	keys[0x8] = 0;
-	else if(key == 'd')	keys[0x9] = 0;
-	else if(key == 'f')	keys[0xE] = 0;
-
-	else if(key == 'z')	keys[0xA] = 0;
-	else if(key == 'x')	keys[0x0] = 0;
-	else if(key == 'c')	keys[0xB] = 0;
-	else if(key == 'v')	keys[0xF] = 0;
-}
-
 
 int main(int argc, char** argv) {
-
-	unsigned int delay = 1000;
 
 	if(argc != 2) {
 		printf("need a filename\n");
 		exit(1);
 	}
-
 	initialize();
 	load_game(argv[1]);
-	for(;;) {
+
+	SetTargetFPS(60);  
+	InitWindow(64 * screen_multiplier, 32 * screen_multiplier, "Chip-8 Emulator");
+	while(!WindowShouldClose()) {
+		check_keyboard();		
 		emulate_cycle();
-		usleep(delay);
 		if(draw_flag) {
-			debug_render();
+			BeginDrawing();
+				draw_graphics();
+			EndDrawing();
+//			debug_render();
 			draw_flag = 0;
 		}
 	}
+	CloseWindow();
 	return 0;
 }
