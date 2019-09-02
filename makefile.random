@@ -1,0 +1,5 @@
+CC=gcc
+CFLAGS=-lncurses -g
+color: random.o
+	$(CC) -o random random.o $(CFLAGS)
+

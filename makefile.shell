@@ -1,0 +1,5 @@
+CC=gcc
+CFLAGS=-lncurses -g
+shell: shell.o
+	$(CC) -o shell shell.o $(CFLAGS)
+
